@@ -1,3 +1,7 @@
+#
+*.sqlite
+history
+History
 # ---> Qt
 # C++ objects and libs
 *.slo
