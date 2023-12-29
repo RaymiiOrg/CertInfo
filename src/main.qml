@@ -535,7 +535,7 @@ Author: Remy van Elst (https://raymii.org).
 <p/>
 
 Source: https://github.com/RaymiiOrg/CertInfo
-</p>
+<p/>
 
 The app icon is from the KDE Breeze Icon Theme and is licensed under the
 
