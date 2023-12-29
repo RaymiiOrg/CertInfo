@@ -3,7 +3,7 @@
 
 ; build deploy on windows
 ; \qt5\5.15.2\mingw81_32\bin\qtenv2.bat
-; cd \Users\user\git\build-CertInfo-Desktop_Qt_5_15_2_MinGW_32_bit-Release\release
+; cd \Users\user\git\build-CertInfo-Desktop_Qt_5_15_2_MinGW_64_bit-Release\release
 ; \qt5\5.15.2\mingw81_32\bin\windeployqt.exe CertInfo.exe 
 
 #define MyAppName "CertInfo"
@@ -30,7 +30,7 @@ LicenseFile=C:\Users\user\git\CertInfo\LICENSE
 ;PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
 OutputDir=C:\Users\user\git\setup
-OutputBaseFilename=leafnodesetup
+OutputBaseFilename=CertInfoSetup
 SetupIconFile=C:\Users\user\git\CertInfo\certinfo.ico
 Compression=lzma
 SolidCompression=yes
@@ -43,8 +43,8 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "C:\Users\user\git\build-CertInfo-Desktop_Qt_5_15_2_MinGW_32_bit-Release\release\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\user\git\build-CertInfo-Desktop_Qt_5_15_2_MinGW_32_bit-Release\release\*"; DestDir: "{app}"
+Source: "C:\Users\user\git\build-CertInfo-Desktop_Qt_5_15_2_MinGW_64_bit-Release\release\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Users\user\git\build-CertInfo-Desktop_Qt_5_15_2_MinGW_64_bit-Release\release\*"; DestDir: "{app}"
 Source: "C:\Qt5\Tools\OpenSSL\Win_x86\bin\*.dll"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "C:\windows\system32\msvcr100.dll"; DestDir: "{app}";
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files

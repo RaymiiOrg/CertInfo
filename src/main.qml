@@ -699,18 +699,11 @@ GNU Lesser General Public License v2.1
     // LEAVING ONLY A LIST OF UNUSED ROOT CA'S
 
     DomainsListTextFile {
-        id: txt
-        Component.onCompleted: {
-            txt.getHostnamesFromTextFile("file:///C:/Users/Remy/domains.txt")
-        }
+        id: txt       
     }
 
     BrowserHistoryDB {
         id: db
-        // Component.onCompleted: {
-        //     db.openDb("file:///C:/Users/Remy/places.sqlite")
-        //     db.getHostnamesFromDb()
-        // }
     }
 
 
