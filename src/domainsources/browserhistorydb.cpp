@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) 2023 Remy van Elst https://raymii.org
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+
 #include "browserhistorydb.h"
 
 #include <QDir>
@@ -35,8 +52,8 @@ void BrowserHistoryDb::getHostnamesFromDb()
         return;
 
     QStringList hostnames;
-    QMap<QString, int> countsMap;
-    std::vector<QIntPair> countsVec;
+    QHash<QString, int> countsHash;
+    QList<QIntPair> countsList;
 
     QSqlQuery query;
     if(isFirefox())
@@ -54,18 +71,18 @@ void BrowserHistoryDb::getHostnamesFromDb()
             std::reverse(host.begin(), host.end());
         }
         hostnames.push_back(host);
-        countsMap[host] = count;
+        countsHash[host] = count;
     }
     setLastDbError(query.lastError().text());
     setHostnames(hostnames);
 
-    for(auto& [k,v] : countsMap.toStdMap()) {
-        QIntPair p(k,v);
-        countsVec.push_back(p);
+    QHash<QString, int>::iterator i;
+    for(i = countsHash.begin(); i != countsHash.end(); ++i) {
+        countsList.push_back({i.key(), i.value()});
     }
 
-    std::sort(countsVec.begin(), countsVec.end(), [](const QIntPair& a, const QIntPair& b) { return a.second > b.second; });
-    m_domains->updateFromVector(countsVec);
+    std::sort(countsList.begin(), countsList.end(), [](const QIntPair& a, const QIntPair& b) { return a.second > b.second; });
+    m_domains->updateFromQList(countsList);
 }
 
 
@@ -162,7 +179,7 @@ QUrl BrowserHistoryDb::firefoxFolder() const
 QUrl BrowserHistoryDb::chromeFolder() const
 {
 #ifdef Q_OS_WIN
-    QString appdataPath = QStandardPaths::standardLocations(QStandardPaths::GenericConfigLocation).at(0) + "/Google/Chrome/User Data";
+    QString appdataPath = QStandardPaths::standardLocations(QStandardPaths::GenericConfigLocation).at(0) + "/Google/Chrome/User Data/Default";
     return QUrl::fromLocalFile(appdataPath);
 #else
     return QUrl::fromLocalFile(QStandardPaths::standardLocations(QStandardPaths::HomeLocation).at(0));

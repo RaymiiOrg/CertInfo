@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) 2023 Remy van Elst https://raymii.org
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+
 #include "domainslisttextfile.h"
 #include <QFile>
 #include <QTextStream>
@@ -14,8 +31,8 @@ void DomainsListTextFile::getHostnamesFromTextFile(const QUrl path)
     setTextFileName(path.toLocalFile());
 
     QStringList hostnames;
-    QMap<QString,int> countsMap;
-    std::vector<QIntPair> countsVec;
+    QMap<QString,int> countsHash;
+    QList<QIntPair> countsList;
 
     QFile file(textFileName());
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
@@ -26,22 +43,24 @@ void DomainsListTextFile::getHostnamesFromTextFile(const QUrl path)
     while (!in.atEnd()) {
         QString line = in.readLine();
         if(!line.isEmpty()) {
-            countsMap[line]++;
-            hostnames.push_back(line);
+            countsHash[line]++;
         }
     }
 
     file.close();
 
-    setHostnames(hostnames);
-
-    for(auto& [k,v] : countsMap.toStdMap()) {
-        QIntPair p(k,v);
-        countsVec.push_back(p);
+    QMap<QString, int>::iterator i;
+    for(i = countsHash.begin(); i != countsHash.end(); ++i) {
+        countsList.push_back({i.key(), i.value()});
     }
 
-    std::sort(countsVec.begin(), countsVec.end(), [](const QIntPair& a, const QIntPair& b) { return a.second > b.second; });
-    m_domains->updateFromVector(countsVec);
+    std::sort(countsList.begin(), countsList.end(), [](const QIntPair& a, const QIntPair& b) { return a.second > b.second; });
+
+    for(i = countsHash.begin(); i != countsHash.end(); ++i) {
+        hostnames.push_back(i.key());
+    }
+    setHostnames(hostnames);
+    m_domains->updateFromQList(countsList);
 }
 
 QStringList DomainsListTextFile::hostnames() const

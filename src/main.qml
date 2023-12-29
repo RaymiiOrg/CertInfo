@@ -89,8 +89,8 @@ Window {
 
             Button {
                 id: openTxtButton
-                anchors.top: parent.top
-                anchors.left: openFFDBButton.right
+                anchors.top: openChromeDBButton.bottom
+                anchors.left: parent.left
                 anchors.margins: 5
                 width: 300
                 text: "Open Text file (1 domain per line)"
@@ -101,12 +101,35 @@ Window {
             Button {
                 id: startButton
                 anchors.top: parent.top
-                anchors.left: openTxtButton.right
+                anchors.left: openFFDBButton.right
                 anchors.margins: 5
-                width: 250
-                text: "START"
-                enabled: !proc.busy
+                width: 300
+                text: proc.busy ? "STOP" : "START"
+
                 onClicked: proc.startGatherCertificatesInBackground()
+
+                contentItem: Text {
+                    text: startButton.text
+                    font: startButton.font
+                    opacity: enabled ? 1.0 : 0.3
+                    color: !proc.busy ? startButton.down ? "#17a81a" : "#21be2b" : "crimson"
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    elide: Text.ElideNone
+                }
+            }
+
+            Button {
+                id: exportButton
+                anchors.top: startButton.bottom
+                anchors.left: openFFDBButton.right
+                anchors.margins: 5
+                width: 300
+                text: "Export Results"
+                enabled: !proc.busy && proc.issuersCounted.rowCount > 0
+
+                onClicked: exportFileDialog.open();
+
             }
 
             Text {
@@ -133,7 +156,7 @@ Window {
 
             TextField {
                 id: search
-                anchors.top: openFFDBButton.bottom
+                anchors.top: exportButton.bottom
                 anchors.left: openChromeDBButton.right
                 height: openFFDBButton.height
                 width: openFFDBButton.width
@@ -143,7 +166,7 @@ Window {
 
             ProgressBar {
                 id: prgbr
-                anchors.top: openFFDBButton.bottom
+                anchors.top: startButton.bottom
                 anchors.left: search.right
                 width: 250
                 anchors.margins: 5
@@ -173,7 +196,7 @@ Window {
 
             Text {
                 id: domainsHeader
-                anchors.top: search.bottom
+                anchors.top: openTxtButton.bottom
                 anchors.left: parent.left
                 height: 25
                 width: 300
@@ -261,6 +284,7 @@ Window {
                 anchors.margins: 5
                 clip: true
                 spacing: 2
+                // model: proc.issuersCounted
                 model: rootCAListProxy
                 delegate: FoldableCertInfo {
                     modelData: model
@@ -274,7 +298,6 @@ Window {
                         wrapMode: Text.WordWrap
                         selectByMouse: true
                         text: modelData.string
-                        //text: model.selfsigned ? model.count + ": " + model.subject + " (SELF SIGNED)" : model.count + ": " + model.subject + " (" + model.issuer + ")"
                     }
                 }
             }
@@ -312,7 +335,6 @@ Window {
                         wrapMode: Text.WordWrap
                         selectByMouse: true
                         text: modelData.string
-                        //text: model.selfsigned ? model.count + ": " + model.subject + " (SELF SIGNED)" : model.count + ": " + model.subject + " (" + model.issuer + ")"
                     }
                 }
             }
@@ -350,7 +372,6 @@ Window {
                         wrapMode: Text.WordWrap
                         selectByMouse: true
                         text: modelData.string
-                        //text: model.selfsigned ? model.count + ": " + model.subject + " (SELF SIGNED)" : model.count + ": " + model.subject + " (" + model.issuer + ")"
                     }
                 }
             }
@@ -391,7 +412,6 @@ Window {
                         wrapMode: Text.WordWrap
                         selectByMouse: true
                         text: modelData.string
-                        //text: model.selfsigned ? model.count + ": " + model.subject + " (SELF SIGNED)" : model.count + ": " + model.subject + " (" + model.issuer + ")"
                     }
                 }
             }
@@ -405,27 +425,108 @@ Window {
             id: helpTab
             contentWidth: availableWidth
             ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
-            contentHeight: contentItem.children[0].childrenRect.height
+            width: parent.width
+            height: parent.height
+            clip: true
 
-            ColumnLayout {
-                anchors.fill: parent
-                anchors.margins: 20
-                spacing: 5
+            Text {
+                width: parent.width
+                wrapMode: Text.WordWrap
+                font.pixelSize: 14
 
+                horizontalAlignment: Text.AlignHCenter
+                textFormat: TextEdit.MarkdownText
+                text: "# Which Root Certificate Authorities should you trust?
 
-                Text {
-                    Layout.preferredWidth: parent.width
-                    wrapMode: Text.WordWrap
-                    font.pixelSize: 14
-                    horizontalAlignment: Text.AlignLeft
-                    textFormat: TextEdit.MarkdownText
-                    text: "Gathers all certificates from your browser history (or list of domains).
+Gathers all certificates from your browser history (or list of domains).
 
-**You should update your root store to trust only the root certificates that sites you actually visited use.**
+**You should update your root store to trust only the root CA's for sites you actually visit.**
 
 All CA's can sign certs for all domains, as was demonstrated by the Diginotar hack<p />
 
-and the China Internet Network Information Center (CNNIC) & WoSign (China's largest CA) issuance of fake certificates.
+and the China Internet Network Information Center (CNNIC) & WoSign (China's
+
+largest CA) issuance of fake certificates.<p />
+
+This tool parses your browser history and retreives all certificates from all domains
+
+in your history. No data is sent to a third-party service except for the GET request
+
+to said domain. All this is done locally on your own device.
+
+HTTP requests are sent 10 at once.
+
+# Why did you make this tool
+
+In the Twit.tv podcast Security Now, episode #951 it was stated that just 7
+
+certificate authorities in total (of around 85) account for 99% of all
+
+currently (late 2023) unexpired web certificates. Let's Encrypt is at almost
+
+half of that (47%) followed up by DigiCert (22%) then Sectigo (former Comodo, 11%).
+
+
+Having worked for a Dutch Certificate Authority myself (DigiDentity, not
+
+DigiNotar!) I know a bit about certificates, combined with my programming
+
+experience with Qt and some free time made for this tool. It should help
+
+you clean up your root store and have only trusted root CA's for sites
+
+that you actually visit. Probably not the Hong Kong Post office.
+
+
+<hr/>
+
+For me personally, the above numbers line up. Let's Encrypt is by far the
+
+largest issuer of certificates to sites I visit. Followed up by a mix of
+
+DigiCert, Comodo, VeriSign and QuoVadis. Surprises for me were the
+
+`RO certSIGN certSIGN ROOT CA` (for the `community.ns.nl` domain) and
+
+`TW TAIWAN-CA Root CA TWCA Global Root CA` (for `realtek.com`).
+
+# Where is my Firefox history?
+
+The path to your firefox profile folder which contains the history file
+
+named `places.sqlite` is: `%APPDATA%\Mozilla\Firefox\Profiles\`.
+
+Via firefox you can click the `menu` button, click `Help` and select
+
+`More Troubleshooting Information`.
+
+Under the `Application Basics` section next to `Profile Folder`, click `Open Folder`.
+
+<hr/>
+
+# Where is my chrome history?
+
+The path to your Chrome profile folder which contains the history file
+
+named `history` (no extension) is: `%LOCALAPPDATA%\Google\Chrome\User Data`.
+
+
+Via Chrome you can navigate to `chrome://version`, then look for
+
+the `Profile Path`
+
+
+# A list of domains
+
+You can use a text file with one domain (no `https://` in front,
+
+no path or whatsoever at the back, just the domain) per line.
+
+This file will be sorted and the domains in it queried just as the
+
+browser history would.
+
+# License and more information
 
 License: GNU GPLv3
 <p/>
@@ -433,15 +534,18 @@ License: GNU GPLv3
 Author: Remy van Elst (https://raymii.org).
 <p/>
 
-Source: https://github.com/RaymiiOrg/YouLessQt
+Source: https://github.com/RaymiiOrg/CertInfo
 </p>
+
+The app icon is from the KDE Breeze Icon Theme and is licensed under the
+
+GNU Lesser General Public License v2.1
 
 אֶשָּׂא עֵינַי אֶל־הֶהָרִים מֵאַיִן יָבֹא עֶזְרִֽי׃
 
 
 ---
-"
-                }
+"                
             }
         }
 
@@ -450,6 +554,7 @@ Source: https://github.com/RaymiiOrg/YouLessQt
     SortFilterProxyModel {
         id: rootCAListProxy
         sourceModel: proc.issuersCounted
+        sorters: RoleSorter { roleName: "count"; sortOrder: Qt.DescendingOrder}
         filters: [
             AllOf {
                 ValueFilter {
@@ -474,20 +579,17 @@ Source: https://github.com/RaymiiOrg/YouLessQt
     SortFilterProxyModel {
         id: regularCAListProxy
         sourceModel: proc.issuersCounted
+        sorters: RoleSorter { roleName: "count"; sortOrder: Qt.DescendingOrder}
+
+        delayed: true
         filters: [
             AllOf {
-                AnyOf {
-                    RegExpFilter {
-                        roleName: "subject"
-                        pattern: search.text
-                        caseSensitivity: Qt.CaseInsensitive
-                    }
-                    RegExpFilter {
-                        roleName: "domains"
-                        pattern: search.text
-                        caseSensitivity: Qt.CaseInsensitive
-                    }
+                RegExpFilter {
+                    roleName: "subject"
+                    pattern: search.text
+                    caseSensitivity: Qt.CaseInsensitive
                 }
+
                 ValueFilter {
                     enabled: true
                     roleName: "istrustedrootca"
@@ -515,6 +617,9 @@ Source: https://github.com/RaymiiOrg/YouLessQt
     SortFilterProxyModel {
         id: leafListProxy
         sourceModel: proc.issuersCounted
+        delayed: true
+        sorters: RoleSorter { roleName: "count"; sortOrder: Qt.DescendingOrder}
+
         filters: [
             AllOf {
                 AnyOf {
@@ -546,6 +651,9 @@ Source: https://github.com/RaymiiOrg/YouLessQt
     SortFilterProxyModel {
         id: errorListProxy
         sourceModel: proc.issuersCounted
+        delayed: true
+        sorters: RoleSorter { roleName: "count"; sortOrder: Qt.DescendingOrder}
+
         filters: [
             ValueFilter {
                 enabled: true
@@ -559,6 +667,7 @@ Source: https://github.com/RaymiiOrg/YouLessQt
     SortFilterProxyModel {
         id: untrustedListProxy
         sourceModel: proc.issuersCounted
+        delayed: true
         filters: [
             AllOf {
                 ValueFilter {
@@ -585,6 +694,9 @@ Source: https://github.com/RaymiiOrg/YouLessQt
         ]
     }
 
+
+    // ADD SYSTEM ROOT CA LIST AND REMOVE ALL FOUND CERTS,
+    // LEAVING ONLY A LIST OF UNUSED ROOT CA'S
 
     DomainsListTextFile {
         id: txt
@@ -650,6 +762,18 @@ Source: https://github.com/RaymiiOrg/YouLessQt
             db.hostnames = []
             txt.hostnames = []
             txt.getHostnamesFromTextFile(textFileDialog.fileUrl)
+        }
+    }
+
+
+    FileDialog {
+        id: exportFileDialog
+        title: "Export results to which file"
+        folder: shortcuts.home
+        selectExisting: false
+        nameFilters: [ "text file (*.txt)", "All files (*)" ]
+        onAccepted: {
+            proc.exportToText(exportFileDialog.fileUrl)
         }
     }
 

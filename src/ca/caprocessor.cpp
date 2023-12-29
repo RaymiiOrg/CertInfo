@@ -1,6 +1,22 @@
+/*
+ * Copyright (c) 2023 Remy van Elst https://raymii.org
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 #include "caprocessor.h"
-#include <iostream>
 
+#include <iostream>
+#include <QCoreApplication>
 #include <QTimer>
 #include <QThread>
 #include <QSslCertificateExtension>
@@ -45,25 +61,26 @@ void CAProcessor::ignoreSslErrors(QNetworkReply* reply)
         reply->ignoreSslErrors();
 }
 
-QVector<Certificate> CAProcessor::getCertificate(const QString& domain)
+QList<Certificate> CAProcessor::getCertificate(const QString& domain)
 {
-    QVector<Certificate> resultVec;
+    QList<Certificate> resultList;
     QNetworkAccessManager nam;
     QNetworkRequest request;
     request.setUrl("https://" + domain);
-    request.setTransferTimeout(5000);
+    request.setTransferTimeout(3500);
     request.setRawHeader("User-Agent","Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36 Edg/106.0.1370.52");
     request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::UserVerifiedRedirectPolicy);
 
     QEventLoop loop;    
     QNetworkReply* reply = nam.get(request);  
 
-    QTimer::singleShot(6000, &loop, &QEventLoop::quit); // backup timeout
+    QTimer::singleShot(4000, &loop, &QEventLoop::quit); // backup timeout
+    connect(QCoreApplication::instance(), &QCoreApplication::aboutToQuit, &loop, &QEventLoop::quit);
     connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
     connect(&nam, &QNetworkAccessManager::sslErrors, &CAProcessor::ignoreSslErrors);
     loop.exec();
 
-    if(reply && reply->error() != QNetworkReply::NoError) {
+    if(reply && (reply->error() > QNetworkReply::NoError && reply->error() <= QNetworkReply::UnknownNetworkError) ) {
         Certificate error;
         QString errorString = reply->errorString();
         error.subject = domain + ": " + errorString ;
@@ -88,9 +105,6 @@ QVector<Certificate> CAProcessor::getCertificate(const QString& domain)
             continue;
 
         result.isCA = isCA(cert);
-        // we don't want leaf certificates, only intermediate and root
-        // if(!result.isCA)
-        //     continue;
 
         result.isSelfSigned = cert.isSelfSigned();
 
@@ -113,13 +127,13 @@ QVector<Certificate> CAProcessor::getCertificate(const QString& domain)
         if(!result.subjectAlternativeNames.isEmpty())
             result.isSystemTrustedRootCA = false;
 
-        resultVec.push_back(result);
+        resultList.push_back(result);
     }
 
 
     reply->deleteLater();
 
-    return resultVec;
+    return resultList;
 }
 
 

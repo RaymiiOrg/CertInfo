@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) 2023 Remy van Elst https://raymii.org
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+
 #pragma once
 
 #include "qabstractlistmodelwithrowcountsignal.h"
@@ -14,61 +31,50 @@ public:
 
     void clear();
     void updateFromVector(const std::vector<TObject> &newObjects);
+    void updateFromQList(const QList<TObject> &newObjects);
+    void addRow(const TObject&);
+    void updateRow(int rowNr, const TObject&);
     QHash<int, QByteArray> roleNames() const override;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
     bool setData(const QModelIndex &index, const QVariant &value, int role) override;
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
+
     virtual void move(int from, int to);
     int addValueSelector(QByteArray name, std::function<QVariant(const TObject &, const QModelIndex &)> valueSelector);
     int addValueSelector(QByteArray name, std::function<QVariant(const TObject &)> valueSelector);
     int addValueSelector(QByteArray name, std::function<QVariant(const TObject &)> valueSelector, std::function<bool(TObject &, QVariant)> valueSetter);
     int addValueSelector(QByteArray name, std::function<QVariant(const TObject &, const QModelIndex &)> valueSelector, std::function<bool(TObject &, QVariant)> valueSetter);
-
     QVariant dataByRoleName(const QModelIndex &index, const QString &name) const;
-
     void resync();
-    void updateRow(int rowNr, TObject);
-
     int getRoleIdByName(const QString &name) const;
-    QVariantMap getRowById(const QString &rowId) const;
     QVariantMap getRowByField(const QString &fieldName, const QVariant &value) const;
-    QModelIndex getIndexById(const QString &rowId) const;
 
 protected:
     QList<TObject> _listObjects;
     QMap<int, QPair<QByteArray, std::function<QVariant(const TObject &, const QModelIndex &)>>> _valueSelectorMap;
     QMap<int, QPair<QByteArray, std::function<bool(TObject &, QVariant)>>> _valueSetterMap;
-
-private:
-    // This method is called before the internal data structure is replaced/updated.
-    virtual void beforeModelUpdatedFromVector(const std::vector<TObject> &newObjects)
-    {
-        Q_UNUSED(newObjects);
-    }
-
-    // This method is called after the internal data structure is replaced/updated.
-    virtual void afterModelUpdatedFromVector(const std::vector<TObject> &newObjects)
-    {
-        Q_UNUSED(newObjects);
-    }
 };
 
 template <typename TObject>
 void GenericListModel<TObject>::updateFromVector(const std::vector<TObject> &newObjects)
 {
     beginResetModel();
-    // Give derived classes the opportunity to do stuff before data is updated (e.g. save some state based on old data)
-    beforeModelUpdatedFromVector(newObjects);
     _listObjects.clear();
     for (const TObject &item : newObjects)
     {
         _listObjects << item;
     }
-    // Give derived classes the opportunity to do stuff after data is updated (e.g. restore state or (re)build extra internal structures)
-    afterModelUpdatedFromVector(newObjects);
     endResetModel();
 }
 
+
+template <typename TObject>
+void GenericListModel<TObject>::updateFromQList(const QList<TObject> &newObjects)
+{
+    beginResetModel();
+    _listObjects = newObjects;
+    endResetModel();
+}
 
 template <typename TObject>
 void GenericListModel<TObject>::clear()
@@ -135,9 +141,8 @@ int GenericListModel<TObject>::rowCount(const QModelIndex &index) const
 template <typename TObject>
 void GenericListModel<TObject>::move(int from, int to)
 {
-    beginResetModel();
     _listObjects.move(from, to);
-    endResetModel();
+
 }
 
 template <typename TObject>
@@ -197,8 +202,19 @@ void GenericListModel<TObject>::resync()
     updateFromVector(copiedListObjects);
 }
 
+
 template <typename TObject>
-void GenericListModel<TObject>::updateRow(int rowNr, TObject newRow)
+void GenericListModel<TObject>::addRow(const TObject& newRow)
+{
+    auto size = _listObjects.size();
+    emit beginInsertRows(QModelIndex(), size, size);
+    _listObjects.push_back(newRow);
+    emit endInsertRows();
+}
+
+
+template <typename TObject>
+void GenericListModel<TObject>::updateRow(int rowNr, const TObject& newRow)
 {
     if (rowNr >= _listObjects.size())
         return;
@@ -206,18 +222,13 @@ void GenericListModel<TObject>::updateRow(int rowNr, TObject newRow)
     emit dataChanged(index(rowNr), index(rowNr));
 }
 
+
 template <typename TObject>
 int GenericListModel<TObject>::getRoleIdByName(const QString &name) const
 {
     QHash<int, QByteArray> names = roleNames();
     auto iter = std::find_if(names.begin(), names.end(), [name](QByteArray roleName) { return roleName == name; });
     return iter == names.end() ? -1 : iter.key();
-}
-
-template <typename TObject>
-QVariantMap GenericListModel<TObject>::getRowById(const QString &rowId) const
-{
-    return getRowByField("id", rowId);
 }
 
 template <typename TObject>
@@ -240,15 +251,4 @@ QVariantMap GenericListModel<TObject>::getRowByField(const QString &fieldName, c
         data[it.value()] = idx.data(it.key());
 
     return data;
-}
-
-template <typename TObject>
-QModelIndex GenericListModel<TObject>::getIndexById(const QString &rowId) const
-{
-    QModelIndexList matches = this->match(this->index(0, 0), this->getRoleIdByName("id"), rowId, 1, Qt::MatchExactly);
-
-    if (matches.begin() == matches.end())
-        return QModelIndex();
-
-    return *matches.begin();
 }
