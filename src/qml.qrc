@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/">
+        <file>main.qml</file>
+        <file>FoldableCertInfo.qml</file>
+        <file>certinfo.png</file>
+    </qresource>
+</RCC>

@@ -1,0 +1,28 @@
+import QtQuick 2.15
+import QtQuick.Dialogs 1.3
+
+FileDialog {
+    property bool isFirefox: false
+    property bool isTextFile: false
+    required property var db
+    required property var txt
+    id: root
+    title: isTextFile ? "Choose a txt file with one domain per line" : isFirefox ? "Please choose the Firefox places.sqlite file" : "Please choose the Chrome History file"
+    nameFilters: isTextFile ?  [ "text file (*.txt)", "All files (*)" ] : isFirefox ? [ "places.sqlite (places.sqlite)", "All files (*)" ] : [ "History (History)", "All files (*)" ]
+    folder: shortcuts.home
+    onAccepted: {
+        txt.hostnames = ""
+        db.hostnames = ""
+        if(root.isTextFile) {
+            txt.getHostnamesFromTextFile(root.fileUrl)
+        } else {
+            if(!db.openDb(root.fileUrl)) {
+                infoText.text = "Error opening db file!"
+            } else {
+                db.isFirefox = root.isFirefox;
+                db.getHostnamesFromDb();
+            }
+        }
+    }
+    Component.onCompleted: console.log("Using Qt 5 FileDialog")
+}
