@@ -15,7 +15,7 @@
  *
  */
 
-#include "VersionCheck.h"
+#include "versioncheck.h"
 #include <QSettings>
 #include <QRandomGenerator>
 #include <QGuiApplication>
