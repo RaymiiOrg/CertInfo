@@ -51,9 +51,9 @@ int main(int argc, char *argv[])
 
     QStringList selectors;
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-    selectors << "qt5";
+    selectors << "best_qt";
 #else
-    selectors << "qt6";
+    selectors << "worst_qt";
     QQuickStyle::setStyle("Material");
 #endif
 
