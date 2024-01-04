@@ -20,7 +20,7 @@ jobs:
     - uses: actions/checkout@v3
 
     - name: install qt
-      run: sudo apt-get update && sudo apt-get -qy install qtcreator qtbase5-dev qt5-qmake software-properties-common qttools5-dev-tools qtbase5-dev libqt5svg5-dev qtdeclarative5-dev-tools qml-module-qtquick-controls2
+      run: sudo apt-get update && sudo apt-get -qy install qtcreator qtbase5-dev qt5-qmake qtquickcontrols2-5-dev software-properties-common qttools5-dev-tools qtbase5-dev libqt5svg5-dev qtdeclarative5-dev-tools qml-module-qtquick-controls2
     
     - name: Build folder
       run: mkdir -p build 
