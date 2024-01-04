@@ -1,4 +1,4 @@
-#include "CAIssuerFilter.h"
+#include "caissuerfilter.h"
 #include <QDebug>
 
 CAIssuerFilter::CAIssuerFilter(QObject *parent) :
