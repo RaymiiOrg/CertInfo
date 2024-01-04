@@ -1,6 +1,6 @@
 <RCC>
     <qresource prefix="/">
-        <file alias="compat/ExportFileDialog.qml">+qt6/ExportFileDialog.qml</file>
-        <file alias="compat/ImportHostsFileDialog.qml">+qt6/ImportHostsFileDialog.qml</file>
+        <file alias="compat/ExportFileDialog.qml">+worst_qt/ExportFileDialog.qml</file>
+        <file alias="compat/ImportHostsFileDialog.qml">+worst_qt/ImportHostsFileDialog.qml</file>
     </qresource>
 </RCC>
