@@ -6,7 +6,7 @@ QT += quick sql widgets quickcontrols2
 
 QMAKE_CXXFLAGS = -Wno-deprecated-declarations
 
-VERSION = 2024.01.0.0     # major.minor.patch.build
+VERSION = 2024.01.1.0     # major.minor.patch.build
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"
 QMAKE_TARGET_PRODUCT = "CertInfo"
 QMAKE_TARGET_COMPANY = "Sparkling Network"
