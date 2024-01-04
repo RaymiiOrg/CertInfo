@@ -39,8 +39,7 @@ SOURCES += \
 
 CONFIG += c++17
 
-RESOURCES += src/qml.qrc \
-    src/qt5.qrc
+RESOURCES += src/qml.qrc 
 
 contains(QT_MAJOR_VERSION, 6) {
     RESOURCES += src/qt6.qrc
