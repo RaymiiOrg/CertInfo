@@ -1,0 +1,34 @@
+# This starter workflow is for a CMake project running on a single platform. There is a different starter workflow if you need cross-platform coverage.
+# See: https://github.com/actions/starter-workflows/blob/main/ci/cmake-multi-platform.yml
+name: CMake on a single platform
+
+on:
+  push:
+    branches: [ "master", "citest" ]
+  pull_request:
+    branches: [ "master", "citest" ]
+
+env:
+  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
+  BUILD_TYPE: Release
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: install qt
+      run: sudo apt-get update && sudo apt-get -qy install qtdeclarative5-dev qtbase5-dev qt5-qmake qtquickcontrols2-5-dev software-properties-common qttools5-dev-tools qtbase5-dev libqt5svg5-dev qtdeclarative5-dev-tools qml-module-qtquick-controls
+    
+    - name: Build folder
+      run: mkdir -p build 
+      
+    - name: Configure QMake 
+      working-directory: ${{github.workspace}}/build
+      run: qmake ../CertInfo.pro # CONFIG+=qtquickcompiler 
+    
+    - name: Build
+      working-directory: ${{github.workspace}}/build
+      run: make -j 
