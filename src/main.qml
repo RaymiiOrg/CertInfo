@@ -194,7 +194,7 @@ Window {
                 anchors.top: infoText.bottom
                 anchors.margins: 5
                 font.pixelSize: 12
-                text: proc.statusText
+                text: proc.statusText === "" ? "Please close your browser before opening history file" : proc.statusText
             }
 
             TextField {
