@@ -71,7 +71,7 @@ Window {
             anchors.fill: parent
             onClicked: {
                 newVersionBar.visible = false
-                Qt.openUrlExternally("https://raymii.org.nl")
+                Qt.openUrlExternally("https://raymii.org")
             }
         }
     }
