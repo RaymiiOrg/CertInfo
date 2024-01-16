@@ -7,7 +7,7 @@ FileDialog {
     required property var db
     required property var txt
     id: root
-    title: isTextFile ? "Choose a txt file with one domain per line" : isFirefox ? "Please choose the Firefox places.sqlite file" : "Please choose the Chrome History file"
+    title: isTextFile ? "Choose a txt file with one domain per line" : isFirefox ? "Please choose the Firefox places.sqlite file" : "Please choose the Chrome/Edge History file"
     nameFilters: isTextFile ?  [ "text file (*.txt)", "All files (*)" ] : isFirefox ? [ "places.sqlite (places.sqlite)", "All files (*)" ] : [ "History (History)", "All files (*)" ]
     onAccepted: {
         txt.hostnames = ""
@@ -23,5 +23,4 @@ FileDialog {
             }
         }
     }
-    Component.onCompleted: console.log("Using Qt 6 FileDialog")
 }

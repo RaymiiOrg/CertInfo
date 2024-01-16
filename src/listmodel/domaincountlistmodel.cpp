@@ -19,6 +19,6 @@
 
 domainCountListModel::domainCountListModel(QObject* parent) : GenericListModel<QIntPair>(parent)
 {
-    addValueSelector("domain", [](const QIntPair &m) { return m.first; });
-    addValueSelector("count", [](const QIntPair &m) { return m.second; });
+    addSelector("domain", [](const QIntPair &m) { return m.first; });
+    addSelector("count", [](const QIntPair &m) { return m.second; });
 }

@@ -115,7 +115,7 @@ Window {
                 anchors.margins: 5
                 width: 300
                 enabled: !proc.busy
-                text: "Open Firefox History file (places.sqlite)"
+                text: "Open Firefox History file "
                 onClicked: firefoxFileDialog.open()
             }
 
@@ -126,7 +126,7 @@ Window {
                 anchors.margins: 5
                 width: 300
                 enabled: !proc.busy
-                text: "Open Chrome History file (history)"
+                text: "Open Chrome/Edge History file"
                 onClicked: chromeFileDialog.open()
             }
 
@@ -583,17 +583,29 @@ Under the `Application Basics` section next to `Profile Folder`, click `Open Fol
 
 <hr/>
 
-# Where is my chrome history?
+# Where is my Chrome history?
 
 The path to your Chrome profile folder which contains the history file
 
-named `history` (no extension) is: `%LOCALAPPDATA%\Google\Chrome\User Data`.
+named `History` (no extension) is: `%LOCALAPPDATA%\Google\Chrome\User Data\Default`.
 
 
 Via Chrome you can navigate to `chrome://version`, then look for
 
 the `Profile Path`
 
+# Where is my Edge history
+
+Since Edge is based on Chrome, the file format is the same. The
+
+`History` file is located here:
+
+`%LOCALAPPDATA%\Microsoft\Edge\User Data\Default`
+
+
+Please note that old versions of Edge (not based on Chrome)
+
+are not supported.
 
 # A list of domains
 
@@ -788,9 +800,6 @@ GNU Lesser General Public License v2.1
             }
         ]
     }
-
-    // ADD SYSTEM ROOT CA LIST AND REMOVE ALL FOUND CERTS,
-    // LEAVING ONLY A LIST OF UNUSED ROOT CA'S
 
     DomainsListTextFile {
         id: txt       
