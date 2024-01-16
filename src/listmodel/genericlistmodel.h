@@ -40,29 +40,29 @@ public:
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
 
     virtual void move(int from, int to);
-    int addValueSelector(QByteArray name, std::function<QVariant(const TObject &, const QModelIndex &)> valueSelector);
-    int addValueSelector(QByteArray name, std::function<QVariant(const TObject &)> valueSelector);
-    int addValueSelector(QByteArray name, std::function<QVariant(const TObject &)> valueSelector, std::function<bool(TObject &, QVariant)> valueSetter);
-    int addValueSelector(QByteArray name, std::function<QVariant(const TObject &, const QModelIndex &)> valueSelector, std::function<bool(TObject &, QVariant)> valueSetter);
+    int addSelector(QByteArray name, std::function<QVariant(const TObject &, const QModelIndex &)> selector);
+    int addSelector(QByteArray name, std::function<QVariant(const TObject &)> selector);
+    int addSelector(QByteArray name, std::function<QVariant(const TObject &)> selector, std::function<bool(TObject &, QVariant)> valueSetter);
+    int addSelector(QByteArray name, std::function<QVariant(const TObject &, const QModelIndex &)> selector, std::function<bool(TObject &, QVariant)> valueSetter);
     QVariant dataByRoleName(const QModelIndex &index, const QString &name) const;
     void resync();
     int getRoleIdByName(const QString &name) const;
     QVariantMap getRowByField(const QString &fieldName, const QVariant &value) const;
 
 protected:
-    QList<TObject> _listObjects;
-    QMap<int, QPair<QByteArray, std::function<QVariant(const TObject &, const QModelIndex &)>>> _valueSelectorMap;
-    QMap<int, QPair<QByteArray, std::function<bool(TObject &, QVariant)>>> _valueSetterMap;
+    QList<TObject> m_listObjects;
+    QMap<int, QPair<QByteArray, std::function<QVariant(const TObject &, const QModelIndex &)>>> m_selectors;
+    QMap<int, QPair<QByteArray, std::function<bool(TObject &, QVariant)>>> m_valueSetters;
 };
 
 template <typename TObject>
 void GenericListModel<TObject>::updateFromVector(const std::vector<TObject> &newObjects)
 {
     beginResetModel();
-    _listObjects.clear();
+    m_listObjects.clear();
     for (const TObject &item : newObjects)
     {
-        _listObjects << item;
+        m_listObjects << item;
     }
     endResetModel();
 }
@@ -72,7 +72,7 @@ template <typename TObject>
 void GenericListModel<TObject>::updateFromQList(const QList<TObject> &newObjects)
 {
     beginResetModel();
-    _listObjects = newObjects;
+    m_listObjects = newObjects;
     endResetModel();
 }
 
@@ -80,7 +80,7 @@ template <typename TObject>
 void GenericListModel<TObject>::clear()
 {
     beginResetModel();
-    _listObjects.clear();
+    m_listObjects.clear();
     endResetModel();
 }
 
@@ -88,7 +88,7 @@ template <typename TObject>
 QHash<int, QByteArray> GenericListModel<TObject>::roleNames() const
 {
     QHash<int, QByteArray> roles;
-    for (auto it = _valueSelectorMap.begin(); it != _valueSelectorMap.end(); ++it)
+    for (auto it = m_selectors.begin(); it != m_selectors.end(); ++it)
     {
         roles[it.key()] = it->first;
     }
@@ -103,10 +103,10 @@ QVariant GenericListModel<TObject>::data(const QModelIndex &index, int role) con
         return QVariant();
     }
 
-    const TObject &object = _listObjects[index.row()];
-    auto valueSelectorIterator = _valueSelectorMap.find(role);
-    if (valueSelectorIterator != _valueSelectorMap.end())
-        return valueSelectorIterator->second(object, index);
+    const TObject &object = m_listObjects[index.row()];
+    auto selectorIterator = m_selectors.find(role);
+    if (selectorIterator != m_selectors.end())
+        return selectorIterator->second(object, index);
     return QVariant();
 }
 
@@ -117,9 +117,9 @@ bool GenericListModel<TObject>::setData(const QModelIndex &index, const QVariant
         return false;
 
     bool result = false;
-    TObject &object = _listObjects[index.row()];
-    auto valueSetterIterator = _valueSetterMap.find(role);
-    if (valueSetterIterator != _valueSetterMap.end())
+    TObject &object = m_listObjects[index.row()];
+    auto valueSetterIterator = m_valueSetters.find(role);
+    if (valueSetterIterator != m_valueSetters.end())
     {
         result = valueSetterIterator->second(object, value);
         if (result)
@@ -135,45 +135,44 @@ int GenericListModel<TObject>::rowCount(const QModelIndex &index) const
     {
         return 0;
     }
-    return _listObjects.count();
+    return m_listObjects.count();
 }
 
 template <typename TObject>
 void GenericListModel<TObject>::move(int from, int to)
 {
-    _listObjects.move(from, to);
+    m_listObjects.move(from, to);
 
 }
 
 template <typename TObject>
-int GenericListModel<TObject>::addValueSelector(QByteArray name, std::function<QVariant(const TObject &)> valueSelector)
+int GenericListModel<TObject>::addSelector(QByteArray name, std::function<QVariant(const TObject &)> selector)
 {
-    // std::bind ignores extra arguments, (I.E. QModelIndex)
-    std::function<QVariant(TObject, const QModelIndex &)> newValueSelector = std::bind(valueSelector, std::placeholders::_1);
-    return addValueSelector(name, newValueSelector);
+    std::function<QVariant(TObject, const QModelIndex &)> newselector = std::bind(selector, std::placeholders::_1);
+    return addSelector(name, newselector);
 }
 
 template <typename TObject>
-int GenericListModel<TObject>::addValueSelector(QByteArray name, std::function<QVariant(const TObject &)> valueSelector, std::function<bool(TObject &, QVariant)> valueSetter)
+int GenericListModel<TObject>::addSelector(QByteArray name, std::function<QVariant(const TObject &)> selector, std::function<bool(TObject &, QVariant)> valueSetter)
 {
-    int roleNumber = addValueSelector(name, valueSelector);
-    _valueSetterMap[roleNumber] = QPair<QByteArray, std::function<bool(TObject &, QVariant)>> {name, valueSetter};
+    int roleNumber = addSelector(name, selector);
+    m_valueSetters[roleNumber] = QPair<QByteArray, std::function<bool(TObject &, QVariant)>> {name, valueSetter};
     return roleNumber;
 }
 
 template <typename TObject>
-int GenericListModel<TObject>::addValueSelector(QByteArray name, std::function<QVariant(const TObject &, const QModelIndex &)> valueSelector, std::function<bool(TObject &, QVariant)> valueSetter)
+int GenericListModel<TObject>::addSelector(QByteArray name, std::function<QVariant(const TObject &, const QModelIndex &)> selector, std::function<bool(TObject &, QVariant)> valueSetter)
 {
-    int roleNumber = addValueSelector(name, valueSelector);
-    _valueSetterMap[roleNumber] = QPair<QByteArray, std::function<bool(TObject &, QVariant)>> {name, valueSetter};
+    int roleNumber = addSelector(name, selector);
+    m_valueSetters[roleNumber] = QPair<QByteArray, std::function<bool(TObject &, QVariant)>> {name, valueSetter};
     return roleNumber;
 }
 
 template <typename TObject>
-int GenericListModel<TObject>::addValueSelector(QByteArray name, std::function<QVariant(const TObject &, const QModelIndex &)> valueSelector)
+int GenericListModel<TObject>::addSelector(QByteArray name, std::function<QVariant(const TObject &, const QModelIndex &)> selector)
 {
-    int roleNumber = Qt::UserRole + _valueSelectorMap.size() + 1;
-    _valueSelectorMap[roleNumber] = QPair<QByteArray, std::function<QVariant(TObject, const QModelIndex &)>> {name, valueSelector};
+    int roleNumber = Qt::UserRole + m_selectors.size() + 1;
+    m_selectors[roleNumber] = QPair<QByteArray, std::function<QVariant(TObject, const QModelIndex &)>> {name, selector};
     return roleNumber;
 }
 
@@ -185,8 +184,8 @@ QVariant GenericListModel<TObject>::dataByRoleName(const QModelIndex &index, con
         return QVariant();
     }
 
-    const TObject &object = _listObjects[index.row()];
-    for (const QPair<QByteArray, std::function<QVariant(const TObject &, const QModelIndex &)>> &mapEntry : _valueSelectorMap)
+    const TObject &object = m_listObjects[index.row()];
+    for (const QPair<QByteArray, std::function<QVariant(const TObject &, const QModelIndex &)>> &mapEntry : m_selectors)
     {
         if (mapEntry.first == roleName)
             return mapEntry.second(object, index);
@@ -198,7 +197,7 @@ template <typename TObject>
 void GenericListModel<TObject>::resync()
 {
     std::vector<TObject> copiedListObjects;
-    std::copy(_listObjects.begin(), _listObjects.end(), std::back_inserter(copiedListObjects));
+    std::copy(m_listObjects.begin(), m_listObjects.end(), std::back_inserter(copiedListObjects));
     updateFromVector(copiedListObjects);
 }
 
@@ -206,9 +205,9 @@ void GenericListModel<TObject>::resync()
 template <typename TObject>
 void GenericListModel<TObject>::addRow(const TObject& newRow)
 {
-    auto size = _listObjects.size();
+    auto size = m_listObjects.size();
     emit beginInsertRows(QModelIndex(), size, size);
-    _listObjects.push_back(newRow);
+    m_listObjects.push_back(newRow);
     emit endInsertRows();
 }
 
@@ -216,9 +215,9 @@ void GenericListModel<TObject>::addRow(const TObject& newRow)
 template <typename TObject>
 void GenericListModel<TObject>::updateRow(int rowNr, const TObject& newRow)
 {
-    if (rowNr >= _listObjects.size())
+    if (rowNr >= m_listObjects.size())
         return;
-    _listObjects[rowNr] = newRow;
+    m_listObjects[rowNr] = newRow;
     emit dataChanged(index(rowNr), index(rowNr));
 }
 

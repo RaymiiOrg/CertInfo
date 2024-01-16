@@ -6,7 +6,7 @@ QT += quick sql widgets quickcontrols2
 
 QMAKE_CXXFLAGS = -Wno-deprecated-declarations
 
-VERSION = 2024.01.1.0     # major.minor.patch.build
+VERSION = 2024.01.2.0     # major.minor.patch.build
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"
 QMAKE_TARGET_PRODUCT = "CertInfo"
 QMAKE_TARGET_COMPANY = "Sparkling Network"
@@ -64,6 +64,7 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 include(src/thirdparty/SortFilterProxyModel/SortFilterProxyModel.pri)
 
 DISTFILES += \
+    README.md \
     certinfo.ico
 
 
